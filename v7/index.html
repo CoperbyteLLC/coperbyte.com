@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Coperbyte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="icon" type="image/png" href="images/clogo.png" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+  /* Default (dark mode) */
+  a {
+    color: #FFF; /* Dark text for light background */
+  }
+
+  /* Light mode */
+  @media (data-theme: light) {
+  a {
+    color: #000; /* Light text for dark background */
+  }
+  }
+  </style>
+  <style>
+    :root{
+      /* base scale */
+      --z-50:#fafafa; --z-100:#f4f4f5; --z-200:#e4e4e7; --z-300:#d4d4d8;
+      --z-500:#71717a; --z-600:#52525b; --z-700:#3f3f46; --z-800:#27272a; --z-900:#18181b;
+
+      /* brand */
+      --brand:#0f172a;
+      --accent:#16a3ad;
+
+      /* surfaces (light) */
+      --bg:#ffffff;
+      --surface:#ffffff;
+      --muted:#fafafa;
+      --text:#27272a;
+      --text-muted:#52525b;
+      --border:#e4e4e7;
+
+      --radius-xl:20px; --radius-2xl:28px;
+      --shadow-sm:0 1px 2px rgba(0,0,0,.04), 0 8px 16px rgba(0,0,0,.04);
+      --shadow-md:0 6px 16px rgba(0,0,0,.08), 0 20px 40px rgba(0,0,0,.06);
+      --container:1152px;
+    }
+    /* dark theme overrides */
+    [data-theme="dark"]{
+      --bg:#0b0b0c;
+      --surface:#16161a;
+      --muted:#0f0f12;
+      --text:#e7e7ea;
+      --text-muted:#b0b0b6;
+      --border:#27272a;
+      --brand:#e6edf7; /* readable on dark */
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg)}
+    img{max-width:100%;display:block}
+
+    .container{max-width:var(--container);margin-inline:auto;padding-inline:20px}
+
+    /* header */
+    .header{position:sticky;top:0;z-index:40;backdrop-filter:saturate(1.2) blur(10px);background:color-mix(in oklab, var(--surface) 90%, transparent);border-bottom:1px solid var(--border)}
+    .nav{height:64px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+    .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
+    .logo img{height:36px;width:auto;object-fit:contain}
+    .logo span{font-weight:600;font-size:18px}
+    nav{display:flex;gap:18px}
+    nav a{color:var(--text-muted);text-decoration:none;font-size:14px}
+    nav a:hover{color:var(--text)}
+
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:14px;border:1px solid var(--border);text-decoration:none;font-weight:500;color:var(--text);transition:.2s ease;box-shadow:var(--shadow-sm);background:var(--surface)}
+    .btn:hover{background:var(--muted)}
+    .btn.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
+    .btn.primary:hover{filter:brightness(1.05)}
+
+    /* hero */
+    .hero-wrap{position:relative;overflow:hidden}
+    .hero-bg{position:absolute;inset:0;background:linear-gradient(180deg,var(--z-50),var(--bg) 40%);z-index:-1}
+    [data-theme="dark"] .hero-bg{background:linear-gradient(180deg,#0e0e11,var(--bg) 40%)}
+    .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;padding-block:84px;align-items:center}
+    .hero h2{font-weight:900;font-size:42px;line-height:1.2;margin:0;color:var(--text)}
+    .hero p{margin-top:14px;color:var(--text-muted);font-size:18px;line-height:1.6}
+    .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;margin-bottom:18px;}
+    .pill{padding:6px 10px;border:1px solid var(--border);border-radius:999px;font-size:12px;background:var(--surface);color:var(--text-muted)}
+    .tech-card{aspect-ratio:16/10;border:1px solid var(--border);border-radius:var(--radius-2xl);background:var(--surface);padding:22px;box-shadow:var(--shadow-sm);display:flex;align-items:center;justify-content:center}
+    .tech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%}
+    .tech-chip{border:1px solid var(--border);border-radius:16px;padding:12px;text-align:center;font-size:14px;color:var(--text-muted);background:var(--muted)}
+    .subtle{text-align:center;font-size:12px;color:var(--text-muted);margin-top:10px}
+
+    /* sections */
+    .section{padding-block:68px}
+    .section h2{font-size:32px;margin:0 0 18px;font-weight:800;color:var(--text)}
+    .eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}
+
+    .grid{display:grid;gap:18px}
+    .grid.cols-3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+    .grid.cols-2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+
+    .card{border:1px solid var(--border);border-radius:20px;background:var(--surface);padding:22px;box-shadow:var(--shadow-sm)}
+    .card h3{margin:0 0 6px;font-weight:600;color:var(--text)}
+    .card p{margin:4px 0 0;color:var(--text-muted);font-size:14px;line-height:1.6}
+    .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+    /* contact */
+    .contact{display:grid;gap:22px}
+    @media(min-width:768px){.contact{grid-template-columns:1fr 1fr}}
+    .form{display:grid;gap:12px}
+    .field{display:grid;gap:6px}
+    .label{font-size:14px;font-weight:600}
+    .input,.textarea{border:1px solid var(--border);border-radius:14px;padding:10px 12px;font:inherit;color:inherit;background:var(--surface);outline:none}
+    .textarea{resize:vertical;min-height:120px}
+    a{color:var(--text-muted);text-decoration:none;font-size:14px}
+    a:hover{color:var(--text)}
+    .sidebar{background:var(--muted);border:1px solid var(--border);border-radius:20px;padding:22px}
+    .sidebar h3{margin:0 0 10px;font-weight:600;color:var(--text)}
+    .sidebar ul{padding:0;margin:0;list-style:none}
+    .sidebar li{margin:8px 0;color:var(--text-muted);font-size:14px}
+
+    /* footer */
+    .footer{border-top:1px solid var(--border);padding-block:36px;background:var(--surface)}
+    .foot{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    .brand{display:flex;align-items:center;gap:10px;color:var(--text)}
+    .brand img{height:28px}
+    .legal a{color:var(--text-muted);text-decoration:none;font-size:14px;margin-left:16px}
+    .legal a:hover{color:var(--text);text-decoration:underline}
+
+    /* responsive tweaks */
+    @media(max-width:768px){
+      .hero{grid-template-columns:1fr;gap:30px;text-align:center}
+      .hero h2{font-size:32px}
+      .hero p{font-size:16px}
+      .tech-grid{grid-template-columns:repeat(2,1fr)}
+      nav{display:none;flex-direction:column;background:var(--surface);position:absolute;top:64px;right:20px;border:1px solid var(--border);border-radius:12px;padding:12px;box-shadow:var(--shadow-md)}
+      nav.show{display:flex}
+      nav a{padding:8px 12px;font-size:16px}
+      .mobile-toggle{display:block;cursor:pointer;background:none;border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-size:16px;color:var(--text)}
+      .btn.primary.hide-on-mobile{display:none}
+    }
+    @media(min-width:769px){
+      .mobile-toggle{display:none}
+    }
+    /* small icon button */
+    .icon-btn{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px}
+  
+    
+
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-P771MRKGCP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-P771MRKGCP');
+   </script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container nav">
+      <a class="logo" href="#home">
+        <img src="images/clogo.png" alt="Coperbyte Logo">
+        <span>Coperbyte</span>
+      </a>
+
+      <button class="mobile-toggle" onclick="document.querySelector('nav').classList.toggle('show')">☰</button>
+
+      <nav>
+        <a href="#services">Services</a>
+        <a href="#solutions">Solutions</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <div style="display:flex;gap:10px;align-items:center">
+        <!-- THEME TOGGLE -->
+        <button id="themeToggle" class="btn icon-btn" type="button" aria-label="Toggle dark mode" title="Toggle theme">🌙</button>
+        <a class="btn primary hide-on-mobile" href="#contact">Get in touch</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <div class="hero-wrap" id="home">
+    <div class="hero-bg"></div>
+    <section class="hero container">
+      <div>
+        <h2>Innovating Future Technologies</h2>
+        <p>We design, build, and scale secure software products for ambitious teams—web, mobile, and AI—backed by global engineering talent.</p>
+        <div class="pills">
+          <span class="pill">Cloud & DevOps</span>
+          <span class="pill">Data & AI</span>
+          <span class="pill">Staff Augmentation</span>
+        </div>
+        <div class="mt-24">
+          <a class="btn primary" href="#contact">Start a project</a>
+          <a class="btn" href="#services">Explore services</a>
+        </div>
+      </div>
+      <div>
+        <div class="tech-card">
+          <div class="tech-grid">
+            <div class="tech-chip">API</div>
+            <div class="tech-chip">React</div>
+            <div class="tech-chip">Python</div>
+            <div class="tech-chip">AWS</div>
+            <div class="tech-chip">K8s</div>
+            <div class="tech-chip">Postgres</div>
+            <div class="tech-chip">Next.js</div>
+            <div class="tech-chip">Node</div>
+            <div class="tech-chip">GPT</div>
+          </div>
+        </div>
+        <h4 style="margin-left:10%;">Innovating With Purpose. Scaling With Precision.</h4>
+        <span class="subtle">At Coperbyte, we design, build, and scale next-generation software solutions that empower ambitious teams to move faster and smarter. From cloud infrastructure and DevOps automation to AI-driven products and full-stack development, we combine deep technical expertise with a relentless focus on security, performance, and user experience. Whether you’re launching a new idea or modernizing legacy systems, our global engineering talent helps you deliver at scale—web, mobile, and AI. We don’t just build technology. We build the future with you.</span>
+      </div>
+    </section>
+  </div>
+
+  <!-- Services -->
+  <section id="services" class="section container">
+    <p class="eyebrow">What we do</p>
+    <h2>End-to-end software services</h2>
+    <div class="grid cols-3">
+      <div class="card"><h3>Product Engineering</h3><p>Greenfield builds and modernizations using React/Next.js, Node, Python, and cloud-native architectures.</p></div>
+      <div class="card"><h3>Cloud & DevOps</h3><p>AWS/GCP setup, containers, IaC, observability, cost controls, SRE practices.</p></div>
+      <div class="card"><h3>Data & AI</h3><p>ETL, analytics, ML prototypes, and LLM integrations with attention to privacy and governance.</p></div>
+    </div>
+  </section>
+
+  <!-- Solutions -->
+  <section id="solutions" class="section container">
+    <p class="eyebrow">Solutions</p>
+    <h2>Accelerators for common use-cases</h2>
+    <div class="grid cols-2">
+      <div class="card"><h3>Real-estate operations</h3><p>Listing portals, deal rooms, and data dashboards.</p><div class="meta"><span class="pill">Next.js</span><span class="pill">AWS</span><span class="pill">Postgres</span></div></div>
+      <div class="card"><h3>Fintech & Payments</h3><p>Wallets, KYC flows, on-chain rails, and reporting.</p><div class="meta"><span class="pill">Node</span><span class="pill">KMS</span><span class="pill">Grafana</span></div></div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="section container">
+    <p class="eyebrow">Let’s talk</p>
+    <h2>Tell us about your project</h2>
+    <div class="contact">
+      <form class="form" id="contactForm" onsubmit="event.preventDefault();document.getElementById('formNote').hidden=false;this.reset();">
+        <div class="field"><label class="label" for="name">Name</label><input class="input" id="name" required placeholder="Your name" /></div>
+        <div class="field"><label class="label" for="email">Email</label><input class="input" id="email" type="email" required placeholder="you@example.com" /></div>
+        <div class="field"><label class="label" for="msg">Project details</label><textarea class="textarea" id="msg" rows="4" placeholder="What are you building?"></textarea></div>
+        <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap">
+          <button class="btn primary" type="submit">Send</button>
+          <small id="formNote" hidden style="color:var(--text-muted)">Contact form sent. Thanks.</small>
+        </div>
+      </form>
+      <aside style="background-image: url('images/mdwatch.png')" class="sidebar">
+        <h3>Coperbyte LLC</h3>
+        <ul>
+          <li>[bc1q2uv42njvc902lha57zhxmlye9074j7zl54wtac]</li>
+          <li>Regions: USA (Honolulu - Phoenix) · Rwanda (Kigali) · India (Pune)</li>
+          <li><a href="mailto:info@coperbyte.com">info@coperbyte.com</a></li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container foot">
+      <div class="brand"><img src="images/clogo.png" alt="Coperbyte Logo"><strong>Coperbyte</strong></div>
+      <div class="legal"><span>© <span id="year"></span> Coperbyte LLC </span><a href="./privacy.html">Privacy</a><a href="#">Terms</a><a href="#">Accessibility</a></div>
+    </div>
+  </footer>
+
+  <script>
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Theme init: localStorage > prefers-color-scheme > default 'light'
+    const root = document.documentElement;
+    const btn = document.getElementById('themeToggle');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const saved = localStorage.getItem('theme');
+    const initial = saved || (prefersDark ? 'dark' : 'light');
+    setTheme(initial);
+
+    // Update icon on load
+    updateIcon();
+
+    btn.addEventListener('click', () => {
+      const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      setTheme(next);
+      localStorage.setItem('theme', next);
+      updateIcon();
+    });
+
+    function setTheme(mode){
+      root.setAttribute('data-theme', mode);
+    }
+    function updateIcon(){
+      const isDark = root.getAttribute('data-theme') === 'dark';
+      btn.textContent = isDark ? '☀️' : '🌙';
+      btn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+      btn.setAttribute('aria-label', btn.title);
+    }
+
+    // Respond to system theme changes (optional)
+    try{
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e=>{
+        if(!localStorage.getItem('theme')){ // only if user hasn't explicitly chosen
+          setTheme(e.matches ? 'dark' : 'light');
+          updateIcon();
+        }
+      });
+    }catch(_e){}
+  </script>
+
+  <script>
+  // Function to send form data
+  async function sendContactForm(endpointUrl) {
+    const form = document.getElementById("contactForm");
+    if (!form) {
+      console.error("Form with id 'contactForm' not found.");
+      return;
+    }
+
+    // Grab form data and convert to object
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch(endpointUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (response.ok) {
+        console.log("Form submitted successfully!");
+        //alert("✅ Message sent!");
+        form.reset();
+      } else {
+        console.error("Error submitting form:", response.statusText);
+        //alert("❌ There was a problem sending your message.");
+      }
+    } catch (error) {
+      console.error("Fetch error:", error);
+      //alert("❌ Network error. Please try again later.");
+    }
+  }
+
+  // Attach submit listener
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("contactForm");
+    if (form) {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault(); 
+        sendContactForm("https://1mnh8bc92i.execute-api.us-east-1.amazonaws.com/prod/contact");
+      });
+    }
+  });
+  </script>
+</body>
+</html>
