@@ -1,0 +1,204 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Contact form pipeline: HTTP API -> Lambda -> S3 (coperbyte-dev-primary/contact-requests/*).
+  Returns CORS-friendly responses. Outputs the API URL.
+
+Parameters:
+  S3BucketName:
+    Type: String
+    Default: coperbyte-dev-primary
+    Description: Existing bucket where submissions will be stored.
+  S3Prefix:
+    Type: String
+    Default: contact/
+    Description: Prefix (folder) inside the bucket for saved submissions (must end with /).
+  CorsAllowOrigins:
+    Type: CommaDelimitedList
+    Default: "https://coperbyte.com,https://www.coperbyte.com"
+    Description: CORS allowed origins (comma-separated).
+
+Resources:
+  ContactLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub contact-form-lambda-role-${AWS::StackName}
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: contact-form-logging
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: logs:CreateLogGroup
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*:*
+        - PolicyName: contact-form-s3-write
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: PutToContactPrefix
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource: !Sub arn:aws:s3:::${S3BucketName}/${S3Prefix}*
+
+  ContactLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ContactLambda}
+      RetentionInDays: 14
+
+  ContactLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub contact-form-writer-${AWS::StackName}
+      Description: Saves contact form submissions to S3 as JSON.
+      Runtime: python3.12
+      Timeout: 10
+      MemorySize: 256
+      Architectures: [ x86_64 ]
+      Role: !GetAtt ContactLambdaRole.Arn
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref S3BucketName
+          BUCKET_PREFIX: !Ref S3Prefix
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          import json, os, uuid, base64, datetime
+          from urllib.parse import parse_qs
+          import boto3
+
+          s3 = boto3.client("s3")
+          BUCKET = os.environ.get("BUCKET_NAME")
+          PREFIX = os.environ.get("BUCKET_PREFIX", "contact/")
+          
+          def _parse_body(event):
+              body = event.get("body")
+              if body is None:
+                  return {}
+
+              is_b64 = event.get("isBase64Encoded", False)
+              raw = base64.b64decode(body) if is_b64 else body.encode("utf-8")
+              headers = event.get("headers") or {}
+              ct = (headers.get("content-type") or headers.get("Content-Type") or "").lower()
+
+              # Try JSON first
+              if "application/json" in ct:
+                  try:
+                      return json.loads(raw.decode("utf-8") or "{}")
+                  except Exception:
+                      pass
+
+              # Then x-www-form-urlencoded
+              if "application/x-www-form-urlencoded" in ct:
+                  parsed = parse_qs(raw.decode("utf-8"))
+                  return {k: (v[0] if len(v) == 1 else v) for k, v in parsed.items()}
+
+              # Last resort: try JSON, else plain text
+              try:
+                  return json.loads(raw.decode("utf-8"))
+              except Exception:
+                  return {"raw": raw.decode("utf-8", errors="replace")}
+
+          def handler(event, context):
+              data = _parse_body(event)
+              now = datetime.datetime.utcnow()
+              rid = uuid.uuid4().hex
+
+              # Pick up some request metadata (HTTP API v2 format)
+              rc = (event.get("requestContext") or {}).get("http") or {}
+              meta = {
+                  "sourceIp": rc.get("sourceIp"),
+                  "method": rc.get("method"),
+                  "path": rc.get("path"),
+                  "userAgent": (event.get("headers") or {}).get("user-agent"),
+                  "receivedAt": now.isoformat(timespec="seconds") + "Z",
+              }
+
+              record = {"data": data, "meta": meta}
+              key = f"{PREFIX}{now:%Y/%m/%d}/contact-{now:%Y%m%dT%H%M%S%fZ}-{rid}.json"
+
+              s3.put_object(
+                  Bucket=BUCKET,
+                  Key=key,
+                  Body=json.dumps(record, ensure_ascii=False).encode("utf-8"),
+                  ContentType="application/json"
+              )
+
+              resp = {
+                  "ok": True,
+                  "saved": {"bucket": BUCKET, "key": key}
+              }
+              return {
+                  "statusCode": 200,
+                  "headers": {
+                      "Content-Type": "application/json",
+                      "Access-Control-Allow-Origin": "https://coperbyte.com",
+                      "Access-Control-Allow-Headers": "content-type",
+                      "Access-Control-Allow-Methods": "OPTIONS,POST"
+                  },
+                  "body": json.dumps(resp)
+              }
+
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub contact-form-api-${AWS::StackName}
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowMethods: [ "OPTIONS", "POST" ]
+        AllowHeaders: [ "content-type" ]
+        AllowOrigins: !Ref CorsAllowOrigins
+        MaxAge: 86400
+
+  LambdaIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt ContactLambda.Arn
+      PayloadFormatVersion: "2.0"
+
+  PostContactRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: "POST /contact"
+      Target: !Sub "integrations/${LambdaIntegration}"
+
+  HttpApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref HttpApi
+      StageName: "$default"
+      AutoDeploy: true
+
+  InvokePermissionForApi:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ContactLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*/POST/contact
+
+Outputs:
+  ApiBaseUrl:
+    Description: Base URL for the HTTP API.
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
+  ContactEndpoint:
+    Description: Fully-qualified POST URL for contact submissions.
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/contact
+  TargetBucketPrefix:
+    Description: S3 destination for saved submissions.
+    Value: !Sub s3://${S3BucketName}/${S3Prefix}
+
